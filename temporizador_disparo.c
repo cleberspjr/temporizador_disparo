@@ -11,25 +11,26 @@
 enum led_state { ALL_ON, TWO_ON, ONE_ON, ALL_OFF };  // Estados dos LEDs
 volatile enum led_state current_state = ALL_OFF;
 
-void turn_off_callback(alarm_id_t id, void *user_data) {
+int64_t turn_off_callback(alarm_id_t id, void *user_data) {
     if (current_state == ALL_ON) {
         gpio_put(LED_PIN_1, 0);  // Desliga LED azul
         current_state = TWO_ON;
-        add_alarm_in_ms(3000, turn_off_callback, NULL, false);  // 3 segundos
+        return 3000000;  // 3 segundos em microssegundos
     } else if (current_state == TWO_ON) {
         gpio_put(LED_PIN_2, 0);  // Desliga LED vermelho
         current_state = ONE_ON;
-        add_alarm_in_ms(3000, turn_off_callback, NULL, false);  // 3 segundos
+        return 3000000;  // 3 segundos em microssegundos
     } else if (current_state == ONE_ON) {
         gpio_put(LED_PIN_3, 0);  // Desliga LED verde
         current_state = ALL_OFF;
-        add_alarm_in_ms(3000, turn_off_callback, NULL, false);  // 3 segundos
+        return 3000000;  // 3 segundos em microssegundos
     } else {
         // Todos os LEDs são ligados novamente
         current_state = ALL_ON;
         gpio_put(LED_PIN_1, 1);  // Liga LED azul
         gpio_put(LED_PIN_2, 1);  // Liga LED vermelho
         gpio_put(LED_PIN_3, 1);  // Liga LED verde
+        return 3000000;  // 3 segundos em microssegundos
     }
 }
 
