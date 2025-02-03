@@ -11,6 +11,11 @@
 enum led_state { ALL_ON, TWO_ON, ONE_ON, ALL_OFF };  // Estados dos LEDs
 volatile enum led_state current_state = ALL_OFF;
 
+// Função para habilitar/desabilitar a interrupção do botão
+void enable_button_interrupt(bool enable) {
+    gpio_set_irq_enabled(BUTTON_PIN, GPIO_IRQ_EDGE_FALL, enable);
+}
+
 int64_t turn_off_callback(alarm_id_t id, void *user_data) {
     if (current_state == ALL_ON) {
         gpio_put(LED_PIN_1, 0);  // Desliga LED azul
@@ -23,7 +28,8 @@ int64_t turn_off_callback(alarm_id_t id, void *user_data) {
     } else if (current_state == ONE_ON) {
         gpio_put(LED_PIN_3, 0);  // Desliga LED verde
         current_state = ALL_OFF;
-        return 3000000;  // 3 segundos em microssegundos
+        enable_button_interrupt(true);  // Reabilita a interrupção do botão
+        return 0;  // Não agendar novo alarme
     } else {
         // Todos os LEDs são ligados novamente
         current_state = ALL_ON;
@@ -41,6 +47,7 @@ void button_callback(uint gpio, uint32_t events) {
         gpio_put(LED_PIN_1, 1);  // Liga LED azul
         gpio_put(LED_PIN_2, 1);  // Liga LED vermelho
         gpio_put(LED_PIN_3, 1);  // Liga LED verde
+        enable_button_interrupt(false);  // Desabilita a interrupção do botão
         add_alarm_in_ms(3000, turn_off_callback, NULL, false);  // 3 segundos
     }
 }
@@ -62,6 +69,7 @@ int main() {
     gpio_pull_up(BUTTON_PIN);  // Ativa o pull-up interno
 
     // Configuração da interrupção do botão
+    enable_button_interrupt(true);  // Habilita a interrupção do botão
     gpio_set_irq_enabled_with_callback(BUTTON_PIN, GPIO_IRQ_EDGE_FALL, true, button_callback);
 
     // Inicializa os LEDs como apagados
